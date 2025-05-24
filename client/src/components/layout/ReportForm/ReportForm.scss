@@ -1,0 +1,37 @@
+.form-container {
+  border-radius: 0.5rem;
+  box-shadow: rgb(145 119 119 / 0.35) 0 5px 15px;
+  max-width: 18rem;
+  padding: 1rem;
+  min-width: 10rem;
+  height: auto;
+  
+  .reportForm {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .position {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+
+      .lat,
+      .lon {
+        flex: 1;
+      }
+    }
+
+    div {
+      width: 100%;
+
+      button {
+        margin-block-start: 1rem;
+      }
+    }
+  }
+
+  &:hover {
+    box-shadow: rgb(88 14 157 / 0.45) 0 5px 15px;
+  }
+}
