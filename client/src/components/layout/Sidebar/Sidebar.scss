@@ -1,101 +1,101 @@
 $base-color: red;
 
 .sidebar {
+  width: 250px;
   height: 100vh;
-
   background-color: #02475e;
   display: flex;
   flex-direction: column;
   z-index: 1;
+  position: fixed;
+  left: 0;
+  top: 0;
 
   .sidebar-brand {
-    display: flex;
-    align-items: center;
     justify-content: center;
-    margin: 0.5rem;
+    height: auto;
+    display: flex;
     color: white;
+    align-items: center;
+    margin: 5px;
     flex-wrap: wrap;
 
     p {
-      font-size: 1.25rem;
+      font-size: larger;
     }
     img {
-      width: 2.1875rem;
-      margin: 0.5rem;
+      width: 35px;
+      margin: 5px;
       height: auto;
     }
     i {
-      margin: 0.5rem;
+      margin: 6px;
       display: none;
       color: #b8b5ff;
-      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.24);
+      box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
     }
   }
 
   .section-header {
     color: rgba(133, 154, 161, 0.58);
-    margin: 0.5rem 0.5rem 0.5rem 0.625rem;
+    margin: 5px 5px 5px 10px;
   }
 
   ul {
-    list-style: none;
-    padding: 0;
-    
     a {
       text-decoration: none;
     }
-
+    list-style-type: none;
     .active-tab {
       background-color: #0a607c;
     }
-
     li {
-      display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
-      height: 2.5rem;
+      height: 40px;
+      display: flex;
       color: #b8b5ff;
-
       i {
         color: white;
-        flex: 0 0 30%;
+        flex: 30%;
         display: grid;
         place-items: center;
-        margin: 0.5rem;
+        margin: 5px;
       }
-
       p {
-        flex: 0 0 70%;
-        margin: 0.5rem;
+        flex: 70%;
+        margin: 5px;
       }
-
-      &:hover {
-        background-color: #0a607c;
-      }
+    }
+    li:hover {
+      background-color: #0a607c;
     }
   }
 }
 
-@media (max-width: 550px) {
+@media only screen and (max-width: 550px) {
   .sidebar {
     .sidebar-brand {
-      p, img {
+      p {
+        display: none;
+      }
+      img {
         display: none;
       }
       i {
         display: block;
       }
     }
-
     .section-header {
       display: none;
     }
-
     ul {
-      font-size: 0.875rem;
-      li p {
-        display: none;
+      font-size: smaller;
+      li {
+        p {
+          display: none;
+        }
       }
     }
   }
@@ -114,15 +114,15 @@ $base-color: red;
         display: block;
       }
     }
-
     .section-header {
       display: block;
     }
-
     ul {
-      font-size: 0.875rem;
-      li p {
-        display: block;
+      font-size: smaller;
+      li {
+        p {
+          display: block;
+        }
       }
     }
   }

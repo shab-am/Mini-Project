@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import './ReportForm.scss';
 import {
@@ -9,10 +9,10 @@ import {
   InputLabel,
   FormControl,
 } from '@mui/material';
-import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { showDialog } from '../../../actions/dialog';
-import { getReports } from '../../../actions/report';
+import { createReport, getReports } from '../../../actions/report';
 import { connect } from 'react-redux';
 
 const initialFormData = {
@@ -40,6 +40,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const ReportForm = ({ showDialog, getReports }) => {
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFormData);
 
   const onInputFieldChange = (e) => {
@@ -52,14 +53,96 @@ const ReportForm = ({ showDialog, getReports }) => {
 
   const submitDataToAPI = async (e) => {
     e.preventDefault();
+    
+    // Convert direction from string to degrees
+    const directionMap = {
+      'north': 0,
+      'northeast': 45,
+      'east': 90,
+      'southeast': 135,
+      'south': 180,
+      'southwest': 225,
+      'west': 270,
+      'northwest': 315
+    };
+
+    // Prepare data with proper types
+    const formattedData = {
+      ...formData,
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude),
+      velocity: parseFloat(formData.velocity),
+      direction: directionMap[formData.direction.toLowerCase()] || 0,
+      altitude: parseFloat(formData.altitude),
+      category: parseInt(formData.category)
+    };
+
     try {
-      const res = await axios.post('/api/reportAircraft', formData);
-      console.log(res.data);
+      if (!formattedData.title || !formattedData.category) {
+        dispatch(showDialog({
+          title: 'Missing Required Fields',
+          description: 'Please fill in all required fields (Title and Category)',
+          buttontext: 'OK'
+        }));
+        return;
+      }
+
+      // Validate numeric ranges
+      if (formattedData.latitude < -90 || formattedData.latitude > 90) {
+        dispatch(showDialog({
+          title: 'Invalid Latitude',
+          description: 'Latitude must be between -90 and 90 degrees',
+          buttontext: 'OK'
+        }));
+        return;
+      }
+
+      if (formattedData.longitude < -180 || formattedData.longitude > 180) {
+        dispatch(showDialog({
+          title: 'Invalid Longitude',
+          description: 'Longitude must be between -180 and 180 degrees',
+          buttontext: 'OK'
+        }));
+        return;
+      }
+
+      if (formattedData.velocity < 0) {
+        dispatch(showDialog({
+          title: 'Invalid Velocity',
+          description: 'Velocity must be a positive number',
+          buttontext: 'OK'
+        }));
+        return;
+      }
+
+      if (formattedData.altitude < 0) {
+        dispatch(showDialog({
+          title: 'Invalid Altitude',
+          description: 'Altitude must be a positive number',
+          buttontext: 'OK'
+        }));
+        return;
+      }
+
+      // Submit the report
+      await dispatch(createReport(formattedData));
+      
+      // Clear the form
       setFormData(initialFormData);
-      getReports();
-      showDialog(dialogcontent);
+      
+      // Show success message
+      dispatch(showDialog({
+        title: 'Success!',
+        description: 'Aircraft report has been successfully submitted.',
+        buttontext: 'OK'
+      }));
     } catch (err) {
-      console.error(err);
+      console.error('Error submitting report:', err);
+      dispatch(showDialog({
+        title: 'Error Submitting Report',
+        description: err.response?.data?.message || 'There was an error submitting your report. Please try again.',
+        buttontext: 'OK'
+      }));
     }
   };
 
@@ -76,10 +159,11 @@ const ReportForm = ({ showDialog, getReports }) => {
             label='Title'
             onChange={onInputFieldChange}
             fullWidth
+            required
           />
         </div>
         <div>
-          <FormControl fullWidth>
+          <FormControl fullWidth required>
             <InputLabel id='category-label'>Category</InputLabel>
             <Select
               name='category'
@@ -87,6 +171,7 @@ const ReportForm = ({ showDialog, getReports }) => {
               value={formData.category}
               label='Category'
               onChange={onInputFieldChange}
+              required
             >
               <MenuItem value={1}>Category A</MenuItem>
               <MenuItem value={2}>Category B</MenuItem>

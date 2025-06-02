@@ -7,12 +7,14 @@ import helpPointsReducer from './helpPointsReducer';
 import roadsReducer from './roadsReducer';
 import generalReducer from './generalReducer';
 
-export default combineReducers({
+const rootReducer = combineReducers({
   dialog: dialogReducer,
   report: reportReducer,
   aircraft: aircraftReducer,
-  searchArea: searchAreaReducer,
+  searchArea: searchAreaReducer, 
   helpPoints: helpPointsReducer,
   roads: roadsReducer,
   general: generalReducer,
 });
+
+export default rootReducer;

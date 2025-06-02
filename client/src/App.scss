@@ -11,32 +11,45 @@
   box-sizing: border-box;
 }
 
-.app-body {
-  background-image: url('./images/background_pattern.png');
+.app {
+  display: flex;
   min-height: 100vh;
-  display: grid;
-  grid-template-rows: var(--navbar-height) 1fr;
-  grid-template-columns: var(--sidebar-width) 1fr;
-  grid-template-areas:
-    'sidebar navbar'
-    'sidebar main';
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
 
-  .navbar {
-    grid-area: navbar;
-  }
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  width: calc(100% - 250px);
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 0;
+}
 
-  .sidebar {
-    grid-area: sidebar;
-  }
+// When sidebar is collapsed
+.sidebar.expand + .main-content {
+  margin-left: 60px;
+}
 
-  .main {
-    grid-area: main;
-    margin: var(--main-margin);
+// Responsive design
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
   }
 }
 
 @media only screen and (max-width: 550px) {
   :root {
     --sidebar-width: 5%;
+  }
+}
+
+@media (max-width: 550px) {
+  .main-content {
+    margin-left: 0;
+    width: 100%;
   }
 }

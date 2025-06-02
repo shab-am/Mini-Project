@@ -1,4 +1,4 @@
-import { GET_REPORTS } from './types';
+import { GET_REPORTS, CREATE_REPORT, DELETE_REPORT } from './types';
 import {
   SET_CURRENT_AIRCRAFT,
   RESET_HELP_POINTS,
@@ -12,32 +12,25 @@ import store from '../store';
 // get all the reports of missing aircrafts from database
 export const getReports = () => async (dispatch) => {
   try {
-    const { data: reports } = await axios.get('api/reportAircraft');
-    console.log(reports);
-
+    const res = await axios.get('/api/reportAircraft');
     dispatch({
       type: GET_REPORTS,
-      payload: reports,
+      payload: res.data
     });
-  } catch (error) {
-    console.error('Error fetching reports:', error.message);
-
-    dispatch(
-      showDialog({
-        title: 'Oops! Error from server',
-        description: error.message,
-        buttontext: 'Ok! Let me check',
-        visible: true,
-      })
-    );
+  } catch (err) {
+    console.error('Error fetching reports:', err);
+    throw err;
   }
 };
 
 // get all the reports of missing aircrafts from database
 export const deleteReport = (id) => async (dispatch) => {
   try {
-    const { data: responseMessage } = await axios.delete(`api/reportAircraft/${id}`);
-    console.log(responseMessage);
+    await axios.delete(`/api/reportAircraft/${id}`);
+    dispatch({
+      type: DELETE_REPORT,
+      payload: id
+    });
 
     if (store.getState().aircraftReducer._id === id) {
       dispatch(setCurrentAircraft({}));
@@ -52,16 +45,9 @@ export const deleteReport = (id) => async (dispatch) => {
     }
 
     dispatch(getReports());
-  } catch (error) {
-    console.error('Error deleting report:', error.message);
-    dispatch(
-      showDialog({
-        title: 'Oops! Error from server',
-        description: error.message,
-        buttontext: 'Ok! Let me check',
-        visible: true,
-      })
-    );
+  } catch (err) {
+    console.error('Error deleting report:', err);
+    throw err;
   }
 };
 
@@ -101,4 +87,19 @@ export const setCurrentAircraft = (aircraft) => (dispatch) => {
       visible: true,
     })
   );
+};
+
+// Action creator for creating a report
+export const createReport = (reportData) => async (dispatch) => {
+  try {
+    const res = await axios.post('/api/reportAircraft', reportData);
+    dispatch({
+      type: CREATE_REPORT,
+      payload: res.data
+    });
+    return res.data;
+  } catch (err) {
+    console.error('Error creating report:', err);
+    throw err;
+  }
 };
