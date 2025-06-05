@@ -14,6 +14,7 @@ import axios from 'axios';
 import { showDialog } from '../../../actions/dialog';
 import { createReport, getReports } from '../../../actions/report';
 import { connect } from 'react-redux';
+import { predictCoordinates } from '../../services/mlService';
 
 const initialFormData = {
   latitude: '',
@@ -42,6 +43,7 @@ const mapDispatchToProps = (dispatch) => ({
 const ReportForm = ({ showDialog, getReports }) => {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFormData);
+  const [prediction, setPrediction] = useState(null);
 
   const onInputFieldChange = (e) => {
     const { name, value } = e.target;
@@ -51,7 +53,7 @@ const ReportForm = ({ showDialog, getReports }) => {
     }));
   };
 
-  const submitDataToAPI = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Convert direction from string to degrees
@@ -124,6 +126,10 @@ const ReportForm = ({ showDialog, getReports }) => {
         return;
       }
 
+      // Call the ML API
+      const result = await predictCoordinates(formattedData);
+      setPrediction(result);
+
       // Submit the report
       await dispatch(createReport(formattedData));
       
@@ -151,7 +157,7 @@ const ReportForm = ({ showDialog, getReports }) => {
       <Typography variant="h4" component="h1" gutterBottom>
         Report Missing Aircraft
       </Typography>
-      <form className='reportForm' onSubmit={submitDataToAPI}>
+      <form className='reportForm' onSubmit={handleSubmit}>
         <div>
           <TextField
             value={formData.title}
@@ -252,6 +258,13 @@ const ReportForm = ({ showDialog, getReports }) => {
           </Button>
         </div>
       </form>
+      {prediction && (
+        <div>
+          <h3>Predicted Crash Coordinates</h3>
+          <p>Latitude: {prediction.Crash_Latitude}</p>
+          <p>Longitude: {prediction.Crash_Longitude}</p>
+        </div>
+      )}
     </Box>
   );
 };

@@ -1,6 +1,6 @@
 import express from 'express';
-import { calcDistance, calcLatLon, calcSquareJson } from '../../calcArea.js';
-import Airplane from '../../models/Airplane.js';
+import { calcDistance, calcLatLon, calcSquareJson } from '../../../calcArea.js';
+import Airplane from '../../../models/Airplane.js';
 
 const router = express.Router();
 
