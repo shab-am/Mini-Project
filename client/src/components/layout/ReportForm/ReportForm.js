@@ -10,38 +10,28 @@ import {
   FormControl,
 } from '@mui/material';
 import { useDispatch } from 'react-redux';
-import axios from 'axios';
 import { showDialog } from '../../../actions/dialog';
-import { createReport, getReports } from '../../../actions/report';
-import { connect } from 'react-redux';
-import { predictCoordinates } from '../../services/mlService';
+import { createReport } from '../../../actions/report';
+import { predictCoordinates } from '../../../services/mlServices';
+import { setPredictedCoordinates } from '../../../actions/prediction';
+import { useNavigate } from 'react-router-dom';
 
 const initialFormData = {
-  latitude: '',
-  longitude: '',
-  velocity: '',
-  direction: '',
-  weather: '',
-  description: '',
-  altitude: '',
   title: '',
   category: '',
+  Aircraft_Name: '',
+  LKP_Latitude: '',
+  LKP_Longitude: '',
+  Speed_knots: '',
+  Heading_deg: '',
+  Altitude_ft: '',
+  Time_since_last_contact_min: '',
+  // Removed: Wind_speed_knots, Wind_direction_deg, weather, description
 };
 
-const dialogcontent = {
-  title: 'Missing Aircraft Successfully Reported',
-  description:
-    'New missing aircraft has been added. Now you can checkout in recent aircrafts to proceed further for search area operations.',
-  buttontext: 'Ok, I will',
-};
-
-const mapDispatchToProps = (dispatch) => ({
-  showDialog: (payload) => dispatch(showDialog(payload)),
-  getReports: () => dispatch(getReports()),
-});
-
-const ReportForm = ({ showDialog, getReports }) => {
+const ReportForm = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
   const [prediction, setPrediction] = useState(null);
 
@@ -55,101 +45,82 @@ const ReportForm = ({ showDialog, getReports }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Convert direction from string to degrees
-    const directionMap = {
-      'north': 0,
-      'northeast': 45,
-      'east': 90,
-      'southeast': 135,
-      'south': 180,
-      'southwest': 225,
-      'west': 270,
-      'northwest': 315
-    };
 
-    // Prepare data with proper types
-    const formattedData = {
-      ...formData,
-      latitude: parseFloat(formData.latitude),
-      longitude: parseFloat(formData.longitude),
-      velocity: parseFloat(formData.velocity),
-      direction: directionMap[formData.direction.toLowerCase()] || 0,
-      altitude: parseFloat(formData.altitude),
-      category: parseInt(formData.category)
+    // Validate required fields
+    if (!formData.title || !formData.category) {
+      dispatch(showDialog({
+        title: 'Missing Required Fields',
+        description: 'Please fill in all required fields (Title and Category)',
+        buttontext: 'OK'
+      }));
+      return;
+    }
+
+    // Prepare data for ML API
+    const mlInput = {
+      LKP_Latitude: Number(formData.LKP_Latitude),
+      LKP_Longitude: Number(formData.LKP_Longitude),
+      Speed_knots: Number(formData.Speed_knots),
+      Heading_deg: Number(formData.Heading_deg),
+      Altitude_ft: Number(formData.Altitude_ft),
+      Time_since_last_contact_min: Number(formData.Time_since_last_contact_min),
+      Wind_speed_knots: 0, // or average value from your dataset
+      Wind_direction_deg: 0, // or average value
+      Aircraft_Name: formData.Aircraft_Name
     };
 
     try {
-      if (!formattedData.title || !formattedData.category) {
-        dispatch(showDialog({
-          title: 'Missing Required Fields',
-          description: 'Please fill in all required fields (Title and Category)',
-          buttontext: 'OK'
-        }));
-        return;
-      }
-
-      // Validate numeric ranges
-      if (formattedData.latitude < -90 || formattedData.latitude > 90) {
-        dispatch(showDialog({
-          title: 'Invalid Latitude',
-          description: 'Latitude must be between -90 and 90 degrees',
-          buttontext: 'OK'
-        }));
-        return;
-      }
-
-      if (formattedData.longitude < -180 || formattedData.longitude > 180) {
-        dispatch(showDialog({
-          title: 'Invalid Longitude',
-          description: 'Longitude must be between -180 and 180 degrees',
-          buttontext: 'OK'
-        }));
-        return;
-      }
-
-      if (formattedData.velocity < 0) {
-        dispatch(showDialog({
-          title: 'Invalid Velocity',
-          description: 'Velocity must be a positive number',
-          buttontext: 'OK'
-        }));
-        return;
-      }
-
-      if (formattedData.altitude < 0) {
-        dispatch(showDialog({
-          title: 'Invalid Altitude',
-          description: 'Altitude must be a positive number',
-          buttontext: 'OK'
-        }));
-        return;
-      }
-
-      // Call the ML API
-      const result = await predictCoordinates(formattedData);
+      // 1. Get prediction from ML API
+      const result = await predictCoordinates(mlInput);
       setPrediction(result);
 
-      // Submit the report
-      await dispatch(createReport(formattedData));
-      
-      // Clear the form
-      setFormData(initialFormData);
-      
-      // Show success message
+      // 2. Prepare data for backend (Node/Express)
+      const backendData = {
+        latitude: formData.LKP_Latitude,
+        longitude: formData.LKP_Longitude,
+        velocity: formData.Speed_knots,
+        direction: formData.Heading_deg,
+        altitude: formData.Altitude_ft,
+        title: formData.title,
+        category: formData.category,
+        weather: '',
+        description: '',
+        predicted_latitude: result.Crash_Latitude,
+        predicted_longitude: result.Crash_Longitude,
+      };
+
+      // 3. Save report to backend
+      await dispatch(createReport(backendData));
+
+      // 4. Show success dialog
       dispatch(showDialog({
         title: 'Success!',
         description: 'Aircraft report has been successfully submitted.',
         buttontext: 'OK'
       }));
+
+      // 5. Clear form
+      setFormData(initialFormData);
+
+      // 6. Dispatch predicted coordinates to Redux
+      if (result.latitude && result.longitude) {
+        dispatch(setPredictedCoordinates({
+          latitude: result.latitude,
+          longitude: result.longitude,
+        }));
+      }
+
     } catch (err) {
-      console.error('Error submitting report:', err);
       dispatch(showDialog({
         title: 'Error Submitting Report',
-        description: err.response?.data?.message || 'There was an error submitting your report. Please try again.',
+        description: err.message || 'There was an error submitting your report. Please try again.',
         buttontext: 'OK'
       }));
     }
+  };
+
+  const handleViewOnMap = () => {
+    navigate('/search-area'); // or whatever your route is
   };
 
   return (
@@ -158,115 +129,45 @@ const ReportForm = ({ showDialog, getReports }) => {
         Report Missing Aircraft
       </Typography>
       <form className='reportForm' onSubmit={handleSubmit}>
-        <div>
-          <TextField
-            value={formData.title}
-            name='title'
-            label='Title'
+        <TextField name='title' label='Title' value={formData.title} onChange={onInputFieldChange} fullWidth required />
+        <FormControl fullWidth required>
+          <InputLabel id='category-label'>Category</InputLabel>
+          <Select
+            name='category'
+            labelId='category-label'
+            value={formData.category}
+            label='Category'
             onChange={onInputFieldChange}
-            fullWidth
             required
-          />
-        </div>
-        <div>
-          <FormControl fullWidth required>
-            <InputLabel id='category-label'>Category</InputLabel>
-            <Select
-              name='category'
-              labelId='category-label'
-              value={formData.category}
-              label='Category'
-              onChange={onInputFieldChange}
-              required
-            >
-              <MenuItem value={1}>Category A</MenuItem>
-              <MenuItem value={2}>Category B</MenuItem>
-              <MenuItem value={3}>Category C</MenuItem>
-            </Select>
-          </FormControl>
-        </div>
-        <div className='position'>
-          <TextField
-            className='lat'
-            name='latitude'
-            value={formData.latitude}
-            label='Latitude'
-            onChange={onInputFieldChange}
-            fullWidth
-          />
-          <TextField
-            className='lon'
-            value={formData.longitude}
-            name='longitude'
-            label='Longitude'
-            onChange={onInputFieldChange}
-            fullWidth
-          />
-        </div>
-        <div>
-          <TextField
-            type='number'
-            value={formData.velocity}
-            name='velocity'
-            label='Velocity(km/hr)'
-            onChange={onInputFieldChange}
-            fullWidth
-          />
-        </div>
-        <div>
-          <TextField
-            name='direction'
-            value={formData.direction}
-            onChange={onInputFieldChange}
-            label='Direction'
-            fullWidth
-          />
-        </div>
-        <div>
-          <TextField
-            name='weather'
-            value={formData.weather}
-            label='Weather'
-            onChange={onInputFieldChange}
-            fullWidth
-          />
-        </div>
-        <div>
-          <TextField
-            name='altitude'
-            value={formData.altitude}
-            onChange={onInputFieldChange}
-            type='number'
-            label='Altitude'
-            fullWidth
-          />
-        </div>
-        <div>
-          <TextField
-            name='description'
-            multiline
-            maxRows={4}
-            label='Description'
-            value={formData.description}
-            onChange={onInputFieldChange}
-            fullWidth
-          />
-        </div>
-        <div>
-          <Button variant='contained' color='primary' type='submit'>
-            Submit Report
-          </Button>
-        </div>
+          >
+            <MenuItem value={1}>Category A</MenuItem>
+            <MenuItem value={2}>Category B</MenuItem>
+            <MenuItem value={3}>Category C</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField name='Aircraft_Name' label='Aircraft Name' value={formData.Aircraft_Name} onChange={onInputFieldChange} fullWidth required />
+        <TextField name='LKP_Latitude' label='LKP Latitude' value={formData.LKP_Latitude} onChange={onInputFieldChange} fullWidth required />
+        <TextField name='LKP_Longitude' label='LKP Longitude' value={formData.LKP_Longitude} onChange={onInputFieldChange} fullWidth required />
+        <TextField name='Speed_knots' label='Speed (knots)' value={formData.Speed_knots} onChange={onInputFieldChange} fullWidth required />
+        <TextField name='Heading_deg' label='Heading (deg)' value={formData.Heading_deg} onChange={onInputFieldChange} fullWidth required />
+        <TextField name='Altitude_ft' label='Altitude (ft)' value={formData.Altitude_ft} onChange={onInputFieldChange} fullWidth required />
+        <TextField name='Time_since_last_contact_min' label='Time Since Last Contact (min)' value={formData.Time_since_last_contact_min} onChange={onInputFieldChange} fullWidth required />
+        <Button variant='contained' color='primary' type='submit'>
+          Submit Report
+        </Button>
       </form>
       {prediction && (
         <div>
-          <h3>Predicted Crash Coordinates</h3>
-          <p>Latitude: {prediction.Crash_Latitude}</p>
-          <p>Longitude: {prediction.Crash_Longitude}</p>
+          <div>
+            <strong>Predicted Crash Coordinates</strong><br />
+            Latitude: {prediction.Crash_Latitude}<br />
+            Longitude: {prediction.Crash_Longitude}
+          </div>
+          <button onClick={handleViewOnMap}>View on Map</button>
         </div>
       )}
     </Box>
   );
 };
 
-export default connect(null, mapDispatchToProps)(ReportForm);
+export default ReportForm;

@@ -31,7 +31,6 @@ const Report = () => {
           <img className='rescue-img' src={rescue} alt='Rescue illustration' />
         </div>
         <div className='form-section'>
-          <h2>Report Missing Aircraft</h2>
           <ReportForm />
         </div>
       </div>

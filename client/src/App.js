@@ -21,7 +21,6 @@ function App() {
           <Sidebar />
           <div className="main-content">
             <Routes>
-              <Route path="/" element={<Home />} />
               <Route path="/home" element={<Home />} />
               <Route path="/report" element={<Report />} />
               <Route path="/search-area" element={<SearchArea />} />
@@ -30,6 +29,7 @@ function App() {
               <Route path="/rescue-teams" element={<RescueTeams />} />
               <Route path="/alert" element={<Alert />} />
               <Route path="/about" element={<About />} />
+              <Route path="/" element={<Home />} />
             </Routes>
           </div>
         </div>

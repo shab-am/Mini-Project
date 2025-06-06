@@ -24,11 +24,11 @@ import {
 
 const mapStateToProps = (state) => {
   return {
-    bufferRadius: state.generalReducer.buffer_radius,
-    bufferDistance: state.generalReducer.buffer_distance,
-    subareaSide: state.generalReducer.subarea_side,
+    bufferRadius: state.general.buffer_radius,
+    bufferDistance: state.general.buffer_distance,
+    subareaSide: state.general.subarea_side,
     additionalPointsCheckboxes:
-      state.generalReducer.additional_points_checkboxes,
+      state.general.additional_points_checkboxes,
   };
 };
 
@@ -78,7 +78,7 @@ const AreaTypeSelector = (props) => {
     if (props.additionalPointsCheckboxes.others) {
       console.log('others called');
     }
-  }, [props.additionalPointsCheckboxes.others]);
+  }, [props.additionalPointsCheckboxes.others, props]);
 
   return (
     <Grid container className='areatypeselector'>
@@ -166,7 +166,7 @@ const AreaTypeSelector = (props) => {
             color='secondary'
             id='outlined-basic'
             label='Helper Data Radius(Km)'
-            defaultValue={props.bufferRadius}
+            value={props.bufferRadius || ''}
             onChange={handleBufferRadius}
             type='number'
             size="medium"
@@ -195,7 +195,7 @@ const AreaTypeSelector = (props) => {
             color='secondary'
             id='outlined-basic'
             label='Sub Area Side(Km)'
-            defaultValue={props.subareaSide}
+            value={props.subareaSide || ''}
             onChange={handleSubareaSide}
             type='number'
             size="medium"
@@ -220,7 +220,7 @@ const AreaTypeSelector = (props) => {
             color='secondary'
             id='outlined-basic'
             label='SearchArea Buffer(Km)'
-            defaultValue={props.bufferDistance}
+            value={props.bufferDistance || ''}
             onChange={handleBufferDistance}
             type='number'
             size="medium"

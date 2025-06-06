@@ -15,7 +15,20 @@ export const getRoads = () => async (dispatch) => {
     });
 
     const state = store.getState();
-    const crashPoint = state.searchAreaReducer.geojson.features[0].center;
+    const features = state.searchAreaReducer?.geojson?.features;
+    const crashPoint = features && features[0] && features[0].center ? features[0].center : null;
+    if (!crashPoint) {
+      dispatch({
+        type: SHOW_DIALOG,
+        payload: {
+          buttonText: 'OK',
+          title: 'No Crash Point',
+          description: 'Crash point not found in search area data.',
+          visible: true,
+        },
+      });
+      return;
+    }
     const bufferDistance = state.generalReducer.buffer_distance * 1000;
 
     const crashPointString = crashPoint.join(',');

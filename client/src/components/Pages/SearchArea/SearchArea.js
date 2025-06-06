@@ -18,7 +18,7 @@ import Loader from '../../layout/Loader/Loader';
 const mapStateToProps = (state) => {
   return {
     areaData: state.searchAreaReducer,
-    loader: state.generalReducer.loader,
+    loader: state.general.loader,
   };
 };
 
