@@ -13,7 +13,20 @@ export const getHelpPoints = () => async (dispatch) => {
   try {
     const state = store.getState();
     const radius = state.generalReducer.buffer_radius * 1000; // convert km to meters
-    const crashPoint = state.searchAreaReducer.geojson.features[0].center;
+    const features = state.searchAreaReducer?.geojson?.features;
+    const crashPoint = features && features[0] && features[0].center ? features[0].center : null;
+    if (!crashPoint) {
+      dispatch({
+        type: SHOW_DIALOG,
+        payload: {
+          buttonText: 'OK',
+          title: 'No Crash Point',
+          description: 'Crash point not found in search area data.',
+          visible: true,
+        },
+      });
+      return;
+    }
     const crashPointString = `${crashPoint[0]},${crashPoint[1]}`;
 
     const hospitalQuery = `https://overpass-api.de/api/interpreter?data=[out:json][timeout:50];(node[amenity=hospital](around:${radius},${crashPointString}););out body;`;

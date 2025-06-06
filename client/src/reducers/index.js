@@ -6,6 +6,7 @@ import searchAreaReducer from './searchAreaReducer';
 import helpPointsReducer from './helpPointsReducer';
 import roadsReducer from './roadsReducer';
 import generalReducer from './generalReducer';
+import predictionReducer from './predictionReducer';
 
 const rootReducer = combineReducers({
   dialog: dialogReducer,
@@ -15,6 +16,7 @@ const rootReducer = combineReducers({
   helpPoints: helpPointsReducer,
   roads: roadsReducer,
   general: generalReducer,
+  predictionReducer,
 });
 
 export default rootReducer;

@@ -56,6 +56,8 @@ const AnimatedMarker = (props) => {
           );
         }
 
+        if (!item.pattern || !item.pattern.coordinates || !item.pattern.coordinates[0]) return null;
+
         // Create and store animated marker and line
         const line = L.polyline(
           item.pattern.coordinates[0].map(([lng, lat]) => [lat, lng]),

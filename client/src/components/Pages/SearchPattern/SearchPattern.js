@@ -34,8 +34,8 @@ import { Link } from 'react-router-dom';
 
 const mapStateToProps = (state) => {
   return {
-    areaData: state.searchAreaReducer,
-    loader: state.generalReducer.loader,
+    areaData: state.searchArea,
+    loader: state.general.loader,
   };
 };
 

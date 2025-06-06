@@ -12,7 +12,7 @@ import seaborn as sns
 import joblib
 
 # Load preprocessed data
-df = pd.read_csv("ml/data/processed/sar_preprocessed_dataset.csv")
+df = pd.read_csv("data/processed/sar_preprocessed_dataset.csv")
 
 # Features and targets
 feature_columns = [
@@ -30,15 +30,15 @@ y = df[[target_lat, target_long]]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train separate models for latitude and longitude
-xgb_lat = XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
-xgb_long = XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42)
+xgb_lat = XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42, learning_rate=0.03)
+xgb_long = XGBRegressor(objective='reg:squarederror', n_estimators=100, random_state=42, learning_rate=0.03)
 
 xgb_lat.fit(X_train, y_train[target_lat])
 xgb_long.fit(X_train, y_train[target_long])
 
 # Save models
-joblib.dump(xgb_lat, "ml/models/xgb_lat.pkl")
-joblib.dump(xgb_long, "ml/models/xgb_long.pkl")
+xgb_lat.save_model("models/xgb_lat.json")
+xgb_long.save_model("models/xgb_long.json")
 
 # Predict
 y_pred_lat = xgb_lat.predict(X_test)
