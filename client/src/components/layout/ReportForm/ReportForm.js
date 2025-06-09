@@ -74,6 +74,12 @@ const ReportForm = () => {
       const result = await predictCoordinates(mlInput);
       setPrediction(result);
 
+      // 6. Dispatch predicted coordinates to Redux (move this up!)
+      const coords = { latitude: result.Crash_Latitude, longitude: result.Crash_Longitude };
+      console.log("About to dispatch predicted coordinates:", coords);
+      dispatch(setPredictedCoordinates(coords));
+      console.log("Dispatched predicted coordinates");
+
       // 2. Prepare data for backend (Node/Express)
       const backendData = {
         latitude: formData.LKP_Latitude,
@@ -102,14 +108,6 @@ const ReportForm = () => {
       // 5. Clear form
       setFormData(initialFormData);
 
-      // 6. Dispatch predicted coordinates to Redux
-      if (result.latitude && result.longitude) {
-        dispatch(setPredictedCoordinates({
-          latitude: result.latitude,
-          longitude: result.longitude,
-        }));
-      }
-
     } catch (err) {
       dispatch(showDialog({
         title: 'Error Submitting Report',
@@ -120,7 +118,7 @@ const ReportForm = () => {
   };
 
   const handleViewOnMap = () => {
-    navigate('/search-area'); // or whatever your route is
+    navigate('/search-area', { state: { fromReport: true } });
   };
 
   return (

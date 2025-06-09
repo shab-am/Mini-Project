@@ -13,7 +13,7 @@ import station_pin from '../../../images/station_pin.png';
 import centerpointicon from '../../../images/rec.png';
 import red_marker_icon from '../../../images/red_marker.png';
 
-const SearchMap = () => {
+const SearchMap = ({ center: propCenter, marker: propMarker }) => {
   const aircraft = useSelector(state => state.aircraftReducer);
   const areaData = useSelector(state => state.searchAreaReducer);
   const help_points_geojson = useSelector(state => state.helpPointsReducer);
@@ -23,19 +23,27 @@ const SearchMap = () => {
   const getImageFromPoint = (type) => {
     if (type === 'hospital') return hospital_pin;
     if (type === 'station') return station_pin;
-    return default_pin;
+      return default_pin;
   };
 
   const apitoken = 'pk.eyJ1IjoibmlraGlsbmFnYXIxMjMiLCJhIjoiY2tvM3l1MGRhMWU5czJ4b2JteWd6NHdoayJ9.ME2Il0_kSq5tr19J6m2UHQ';
   const tileurl_option1 = `https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/{z}/{x}/{y}?access_token=${apitoken}`;
   const tileurl_option2 = `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v9/tiles/{z}/{x}/{y}?access_token=${apitoken}`;
 
-  // Use predicted coordinates if available, else fallback
-  const center = (predicted && typeof predicted.latitude === 'number' && typeof predicted.longitude === 'number')
-    ? [predicted.latitude, predicted.longitude]
-    : (aircraft && typeof aircraft.latitude === 'number' && typeof aircraft.longitude === 'number')
-      ? [aircraft.latitude, aircraft.longitude]
-      : [26.9124, 75.7873];
+  // Use props if provided, else fallback to Redux state
+  const center = propCenter
+    ? [propCenter.latitude, propCenter.longitude]
+    : (predicted && typeof predicted.latitude === 'number' && typeof predicted.longitude === 'number')
+      ? [predicted.latitude, predicted.longitude]
+      : (aircraft && typeof aircraft.latitude === 'number' && typeof aircraft.longitude === 'number')
+        ? [aircraft.latitude, aircraft.longitude]
+        : [26.9124, 75.7873];
+
+  const markerPosition = propMarker
+    ? [propMarker.latitude, propMarker.longitude]
+    : (predicted && typeof predicted.latitude === 'number' && typeof predicted.longitude === 'number')
+      ? [predicted.latitude, predicted.longitude]
+      : null;
 
   const filteredGrid = areaData?.filteredGrid?.features ? areaData.filteredGrid : { features: [] };
 
@@ -71,15 +79,15 @@ const SearchMap = () => {
         <LayersControl.Overlay name='Search Area Layer' checked>
           <LayerGroup>
             {areaData?.geojson?.features && (
-              <GeoJSON
-                data={areaData.geojson}
-                style={{
-                  fillColor: 'orange',
-                  fillOpacity: 0.1,
-                  color: 'purple',
-                  weight: 1,
-                }}
-              />
+            <GeoJSON
+              data={areaData.geojson}
+              style={{
+                fillColor: 'orange',
+                fillOpacity: 0.1,
+                color: 'purple',
+                weight: 1,
+              }}
+            />
             )}
             {areaData?.geojson?.features?.[0]?.center && (
               <LayerGroup>
@@ -96,17 +104,17 @@ const SearchMap = () => {
                   </Popup>
                 </Marker>
                 {(aircraft?.latitude && aircraft?.longitude) && (
-                  <Polyline
-                    pathOptions={{
-                      color: 'grey',
-                      dashArray: '4, 10',
-                      dashOffset: '0',
-                    }}
-                    positions={[
-                      [aircraft.latitude, aircraft.longitude],
-                      areaData.geojson.features[0].center,
-                    ]}
-                  />
+                <Polyline
+                  pathOptions={{
+                    color: 'grey',
+                    dashArray: '4, 10',
+                    dashOffset: '0',
+                  }}
+                  positions={[
+                    [aircraft.latitude, aircraft.longitude],
+                    areaData.geojson.features[0].center,
+                  ]}
+                />
                 )}
               </LayerGroup>
             )}
@@ -149,54 +157,54 @@ const SearchMap = () => {
         <LayersControl.Overlay checked name='Additional Spots Layer'>
           <LayerGroup>
             {help_points_geojson?.features?.map((item, idx) => (
-              <Marker
+                  <Marker
                 key={item.id || idx}
-                icon={L.icon({
+                    icon={L.icon({
                   iconUrl: getImageFromPoint(item.properties?.amenity),
                   iconSize: [30, 30],
-                })}
-                position={[
+                    })}
+                    position={[
                   item.geometry?.coordinates?.[1] || 0,
                   item.geometry?.coordinates?.[0] || 0,
-                ]}
-              >
-                <Popup>
+                    ]}
+                  >
+                    <Popup>
                   {Object.entries(item.properties || {}).map(([key, value]) => (
-                    <span key={`${key}-${item.id}`}>
-                      {key}: {value}
-                      <br />
-                    </span>
-                  ))}
-                </Popup>
-              </Marker>
-            ))}
+                        <span key={`${key}-${item.id}`}>
+                          {key}: {value}
+                          <br />
+                        </span>
+                      ))}
+                    </Popup>
+                  </Marker>
+                ))}
           </LayerGroup>
         </LayersControl.Overlay>
 
         <LayersControl.Overlay checked name='Roads or Rivers'>
           <LayerGroup>
             {roads_geojson?.features?.length > 0 && (
-              <GeoJSON
-                key={roads_geojson.features.length}
-                data={roads_geojson}
-              />
+            <GeoJSON
+              key={roads_geojson.features.length}
+              data={roads_geojson}
+            />
             )}
           </LayerGroup>
         </LayersControl.Overlay>
 
-        {predicted && (
+        {markerPosition && (
           <LayerGroup>
             <Marker
               icon={L.icon({
                 iconUrl: red_marker_icon,
                 iconSize: [35, 35],
               })}
-              position={[predicted.latitude, predicted.longitude]}
+              position={markerPosition}
             >
               <Popup>
                 <b>Predicted Crash Location</b><br />
-                Latitude: {predicted.latitude}<br />
-                Longitude: {predicted.longitude}
+                Latitude: {markerPosition[0]}<br />
+                Longitude: {markerPosition[1]}
               </Popup>
             </Marker>
           </LayerGroup>

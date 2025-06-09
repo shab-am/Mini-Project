@@ -3,6 +3,7 @@ const initialState = {
 };
 
 export default function predictionReducer(state = initialState, action) {
+  console.log("predictionReducer - action:", action);
   switch (action.type) {
     case 'SET_PREDICTED_COORDINATES':
       return { ...state, predictedCoordinates: action.payload };
